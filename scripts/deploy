@@ -1,0 +1,45 @@
+#!/bin/bash
+
+usage_exit() {
+        echo "Usage: $0 [-f] (dev|prod)" 1>&2
+        exit 1
+}
+
+while getopts f OPT
+do
+    case ${OPT} in
+        f)  FLAG_F=1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+ARG1=$1
+stage=${ARG1}
+echo stage: ${stage}
+
+. ./.env.${stage}
+
+if [[ ${FLAG_F} = 1 ]]; then
+    layers=(
+      "pip_packages"
+    )
+    for layer in ${layers[@]}; do
+      mkdir -p src/layers/$layer/
+      pushd src/layers/$layer/
+      docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
+      popd
+    done
+fi
+
+sam build
+
+sam package --output-template-file packaged.yaml --s3-bucket $PackageS3Bucket --s3-prefix $PackageS3Prefix --profile $AWSProfile
+
+sam deploy --template-file packaged.yaml \
+    --stack-name $StackName \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --profile $AWSProfile \
+    --parameter-overrides \
+        "Stage=$Stage"

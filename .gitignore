@@ -22,7 +22,10 @@ pip-log.txt
 pip-delete-this-directory.txt
 target/
 
-.env
+__pycache__
+
+.env*
+!.env.template
 .venv
 env/
 venv/
