@@ -1,2 +1,9 @@
+yq
 pytest
 mypy
+awslogs
+
+boto3
+pyyaml
+botocore
+TwitterAPI

@@ -16,12 +16,15 @@
 .idea/replstate.xml
 .idea/sonarlint
 
+.localstack
+
 build/
 
 pip-log.txt
 pip-delete-this-directory.txt
 target/
 
+.cache/
 __pycache__
 
 .env*
@@ -33,6 +36,14 @@ ENV/
 env.bak/
 venv.bak/
 
+env.*.json
+
+config.*.yaml
+!config.template.yaml
+
 .mypy_cache/
 
 packaged.yaml
+
+src/layers/pip_modules/*
+!src/layers/pip_modules/requirements.txt

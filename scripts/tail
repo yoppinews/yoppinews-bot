@@ -1,0 +1,17 @@
+#!/bin/bash
+
+ARG1=$1
+FnName=$2
+
+if [ $# -ne 2 ] || [[ ! $ARG1 =~ ^(prod|dev)$ ]]; then
+  echo "usage: ./deploy [prod|dev]"
+  exit 1
+fi
+
+stage=$ARG1
+Stage="${ARG1[@]^}"
+echo stage: $stage
+
+. .env.$stage
+
+awslogs get /aws/lambda/${FnName} --watch --profile $AWSProfile

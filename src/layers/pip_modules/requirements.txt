@@ -1,0 +1,3 @@
+boto3==1.9.100
+pyyaml==5.1
+TwitterAPI==2.5.0

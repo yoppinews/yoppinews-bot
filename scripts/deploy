@@ -23,7 +23,7 @@ echo stage: ${stage}
 
 if [[ ${FLAG_F} = 1 ]]; then
     layers=(
-      "pip_packages"
+      "pip_modules"
     )
     for layer in ${layers[@]}; do
       mkdir -p src/layers/$layer/
@@ -42,4 +42,14 @@ sam deploy --template-file packaged.yaml \
     --capabilities CAPABILITY_NAMED_IAM \
     --profile $AWSProfile \
     --parameter-overrides \
-        "Stage=$Stage"
+        "Stage=$stage" \
+        "TwitterAccessTokenKey=$TwitterAccessTokenKey" \
+        "TwitterAccessTokenSecret=$TwitterAccessTokenSecret" \
+        "TwitterConsumerKey=$TwitterConsumerKey" \
+        "TwitterConsumerSecret=$TwitterConsumerSecret" \
+        "ConfigBucket=$ConfigBucket" \
+        "ConfigKeyName=$ConfigKeyName"
+
+aws cloudformation describe-stacks --stack-name $StackName \
+    --output json \
+    --profile $AWSProfile | jq '.Stacks[0].Outputs'
