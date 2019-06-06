@@ -49,3 +49,19 @@ class RetweetMessage:
     @property
     def id_str(self):
         return self._id_str
+
+
+class TweetMessage:
+    def __init__(self, status: str):
+        self._status = status
+
+    @staticmethod
+    def of(d: dict) -> Optional[TweetMessage]:
+        try:
+            return TweetMessage(d['status'])
+        except KeyError:
+            return None
+
+    @property
+    def status(self):
+        return self._status

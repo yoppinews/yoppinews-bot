@@ -217,3 +217,56 @@ Resources:
         FunctionName: !GetAtt RetweetFunction.Arn
         Principal: sns.amazonaws.com
         SourceArn: !Ref RetweetTopic
+
+
+  # ツイートコンポーネント
+  TweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 120
+      CodeUri: src/tweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref TweetTopic
+      Environment:
+        Variables:
+          TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
+          TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
+          TwitterConsumerKey: !Sub ${TwitterConsumerKey}
+          TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+  TweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref TweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  TweetTopic:
+    Type: AWS::SNS::Topic
+  TweetTopicFunctionSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt TweetFunction.Arn
+      Protocol: lambda
+      TopicArn: !Ref TweetTopic
+  TweetTopicFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !GetAtt TweetFunction.Arn
+        Principal: sns.amazonaws.com
+        SourceArn: !Ref TweetTopic
