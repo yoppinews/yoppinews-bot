@@ -7,3 +7,4 @@ boto3
 pyyaml
 botocore
 TwitterAPI
+requests

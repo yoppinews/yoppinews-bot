@@ -96,8 +96,6 @@ Resources:
           TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
           TwitterConsumerKey: !Sub ${TwitterConsumerKey}
           TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
-          ConfigBucket: !Sub ${ConfigBucket}
-          ConfigKeyName: !Sub ${ConfigKeyName}
           TargetTopic: !Ref CollectTweetsTopic
           DDBCacheTable: !Ref CollectTweetsDynamoDBTable
       Events:
@@ -167,3 +165,55 @@ Resources:
         AttributeName: ttl
         Enabled: true
 
+
+  # リツイートコンポーネント
+  RetweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 120
+      CodeUri: src/retweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref RetweetTopic
+      Environment:
+        Variables:
+          TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
+          TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
+          TwitterConsumerKey: !Sub ${TwitterConsumerKey}
+          TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+  RetweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref RetweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  RetweetTopic:
+    Type: AWS::SNS::Topic
+  RetweetTopicFunctionSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt RetweetFunction.Arn
+      Protocol: lambda
+      TopicArn: !Ref RetweetTopic
+  RetweetTopicFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !GetAtt RetweetFunction.Arn
+        Principal: sns.amazonaws.com
+        SourceArn: !Ref RetweetTopic

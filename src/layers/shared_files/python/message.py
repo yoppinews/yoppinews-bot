@@ -33,3 +33,19 @@ class CollectTweetsMessage:
     @property
     def options(self) -> TweetHandleOptions:
         return self._options
+
+
+class RetweetMessage:
+    def __init__(self, id_str: str):
+        self._id_str = id_str
+
+    @staticmethod
+    def of(d: dict) -> Optional[RetweetMessage]:
+        try:
+            return RetweetMessage(d['id'])
+        except KeyError:
+            return None
+
+    @property
+    def id_str(self):
+        return self._id_str
