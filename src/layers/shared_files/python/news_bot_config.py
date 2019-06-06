@@ -47,6 +47,14 @@ class NewsBotConfig:
         return self._logger
 
     @property
+    def detect_face_similarity_threshold(self) -> int:
+        return self._dic.get('global_config', {}).get('detect_face_similarity_threshold', 99)
+
+    @property
+    def detect_face_source_image_url(self) -> str:
+        return self._dic.get('global_config', {}).get('detect_face_source_image_url', '')
+
+    @property
     def twitter_target_lists(self) -> List[CollectTweetsListConfig]:
         lists = self._dic.get('twitter_config', {}).get('target_lists', [])
         result = []

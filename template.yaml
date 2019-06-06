@@ -170,7 +170,6 @@ Resources:
   RetweetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 120
       CodeUri: src/retweet/
       Handler: app.lambda_handler
       Layers:
@@ -179,13 +178,6 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: !Sub ${ConfigBucket}
-        - SNSPublishMessagePolicy:
-            TopicName:
-              !Select
-                - 5
-                - !Split
-                  - ":"
-                  - !Ref RetweetTopic
       Environment:
         Variables:
           TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
@@ -223,7 +215,6 @@ Resources:
   TweetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 120
       CodeUri: src/tweet/
       Handler: app.lambda_handler
       Layers:
@@ -232,13 +223,6 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: !Sub ${ConfigBucket}
-        - SNSPublishMessagePolicy:
-            TopicName:
-              !Select
-                - 5
-                - !Split
-                  - ":"
-                  - !Ref TweetTopic
       Environment:
         Variables:
           TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
@@ -270,3 +254,27 @@ Resources:
         FunctionName: !GetAtt TweetFunction.Arn
         Principal: sns.amazonaws.com
         SourceArn: !Ref TweetTopic
+
+
+  # 画像認識コンポーネント
+  DetectRelatedImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/detect_related_image/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - AmazonRekognitionReadOnlyAccess
+  DetectRelatedImageFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedImageFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}

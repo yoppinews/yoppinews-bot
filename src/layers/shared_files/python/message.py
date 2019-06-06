@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, List
 
 from twitter import Tweet, TweetHandleOptions
 
@@ -65,3 +65,19 @@ class TweetMessage:
     @property
     def status(self):
         return self._status
+
+
+class DetectRelatedImageMessage:
+    def __init__(self, image_url: str):
+        self._image_url = image_url
+
+    @staticmethod
+    def of(d: dict) -> Optional[DetectRelatedImageMessage]:
+        try:
+            return DetectRelatedImageMessage(d['image_url'])
+        except KeyError:
+            return None
+
+    @property
+    def image_url(self) -> str:
+        return self._image_url
