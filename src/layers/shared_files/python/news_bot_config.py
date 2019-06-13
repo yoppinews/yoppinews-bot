@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 
 import yaml
 import boto3
@@ -8,6 +8,7 @@ import datetime
 import logging
 
 from twitter import TwitterList, TweetHandleOptions
+from keyword_detector import KeywordDetector
 
 
 class NewsBotConfig:
@@ -51,8 +52,13 @@ class NewsBotConfig:
         return self._dic.get('global_config', {}).get('detect_face_similarity_threshold', 99)
 
     @property
-    def detect_face_source_image_url(self) -> str:
-        return self._dic.get('global_config', {}).get('detect_face_source_image_url', '')
+    def detect_face_source_image_url(self) -> Optional[str]:
+        return self._dic.get('global_config', {})\
+            .get('detect_face_source_image_url', None)
+
+    @property
+    def image_detection_message_template(self) -> Optional[str]:
+        return self._dic.get('detect_related_tweet', {}).get('image_detection_message_template', None)
 
     @property
     def twitter_target_lists(self) -> List[CollectTweetsListConfig]:
@@ -67,6 +73,16 @@ class NewsBotConfig:
             except KeyError:
                 continue
         return result
+
+    @property
+    def keyword_detector(self) -> KeywordDetector:
+        keyword_config = self._dic.get('keyword_config', {})
+        return KeywordDetector(
+            global_keywords=keyword_config.get('keywords', []),
+            user_specific_keywords=keyword_config.get('user_related_keywords', {}),
+            ignored_users=keyword_config.get('ignored_users', []),
+            ignored_keywords=keyword_config.get('ignored_keywords', []),
+        )
 
 
 class CollectTweetsListConfig:

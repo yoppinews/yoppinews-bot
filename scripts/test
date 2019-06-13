@@ -1,4 +1,5 @@
 #!/bin/bash
 
+. .env.dev
 python -m pytest tests/ -v
 mypy --ignore-missing-imports --check-untyped-defs ./src/

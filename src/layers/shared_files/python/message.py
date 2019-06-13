@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Optional, List
+from typing import Optional
 
 from twitter import Tweet, TweetHandleOptions
 
@@ -47,8 +47,14 @@ class RetweetMessage:
             return None
 
     @property
-    def id_str(self):
+    def id_str(self) -> str:
         return self._id_str
+
+    @property
+    def dictionary(self) -> dict:
+        return {
+            'id': self._id_str,
+        }
 
 
 class TweetMessage:
@@ -66,6 +72,12 @@ class TweetMessage:
     def status(self):
         return self._status
 
+    @property
+    def dictionary(self) -> dict:
+        return {
+            'status': self._status,
+        }
+
 
 class DetectRelatedImageMessage:
     def __init__(self, image_url: str):
@@ -81,3 +93,9 @@ class DetectRelatedImageMessage:
     @property
     def image_url(self) -> str:
         return self._image_url
+
+    @property
+    def dictionary(self) -> dict:
+        return {
+            'image_url': self._image_url,
+        }

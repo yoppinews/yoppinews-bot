@@ -52,7 +52,7 @@ def handle(
     sns=sns_client
 ):
     list_configs = config.twitter_target_lists
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    with concurrent.futures.ThreadPoolExecutor() as pool:
         pool.map(lambda l: handle_list(twitter, l, cached_ddb_table, sns, config.logger), list_configs)
     return {}
 
@@ -91,7 +91,6 @@ def handle_tweets(
             continue
         else:
             message = CollectTweetsMessage(status, list_config.options)
-            logger.info(message)
             notify_message(sns, target_topic, message, logger)
             cached_ddb_table.put(status.dictionary)
             new += 1

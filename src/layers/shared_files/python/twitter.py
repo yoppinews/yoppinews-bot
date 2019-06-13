@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import json
 from enum import Enum
 from typing import Optional, List
 
@@ -133,6 +134,16 @@ class TweetHandleOptions:
         self._include_quoted_text = include_quoted_text
         self._evaluate_image = evaluate_image
         self._evaluate_url = evaluate_url
+
+    def __repr__(self):
+        return json.dumps({
+            'always_retweet': self.always_retweet,
+            'include_retweet': self.include_retweet,
+            'include_reply': self.include_reply,
+            'include_quoted_text': self.include_quoted_text,
+            'evaluate_image': self.evaluate_image.value,
+            'evaluate_url': self.evaluate_url.value,
+        })
 
     @staticmethod
     def of(d: dict) -> Optional[TweetHandleOptions]:

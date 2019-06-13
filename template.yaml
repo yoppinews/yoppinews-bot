@@ -256,10 +256,63 @@ Resources:
         SourceArn: !Ref TweetTopic
 
 
+  # 関連ツイート検出コンポーネント
+  DetectRelatedTweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 60
+      CodeUri: src/detect_related_tweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DetectRelatedImageFunction
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref RetweetTopic
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref TweetTopic
+      Environment:
+        Variables:
+          TweetTopic: !Ref TweetTopic
+          RetweetTopic: !Ref RetweetTopic
+          DetectImageFunction: !Ref DetectRelatedImageFunction
+          DetectURLFunction: not_implemented_yet
+      Events:
+        CollectTweetsQueueEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt CollectTweetsQueue.Arn
+            BatchSize: 10
+  DetectRelatedTweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedTweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+
   # 画像認識コンポーネント
   DetectRelatedImageFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Timeout: 10
       CodeUri: src/detect_related_image/
       Handler: app.lambda_handler
       Layers:
@@ -278,3 +331,16 @@ Resources:
           - - '/aws/lambda/'
             - !Ref DetectRelatedImageFunction
       RetentionInDays: !Sub ${LogRetentionInDays}
+
+
+Outputs:
+  CollectTweetsFunction:
+    Value: !Ref CollectTweetsFunction
+  RetweetFunction:
+    Value: !Ref RetweetFunction
+  TweetFunction:
+    Value: !Ref TweetFunction
+  DetectRelatedImageFunction:
+    Value: !Ref DetectRelatedImageFunction
+  DetectRelatedTweetFunction:
+    Value: !Ref DetectRelatedTweetFunction

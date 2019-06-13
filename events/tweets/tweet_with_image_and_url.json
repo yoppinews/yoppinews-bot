@@ -1,0 +1,183 @@
+{
+  "created_at": "Tue Apr 30 20:57:52 +0000 2019",
+  "id": 1123330653255135200,
+  "id_str": "1123330653255135233",
+  "full_text": "テスト: 画像+URL付きツイート https://t.co/jR2fmjJ5ES https://t.co/wOs5Twy4KS",
+  "truncated": false,
+  "display_text_range": [
+    0,
+    41
+  ],
+  "entities": {
+    "hashtags": [],
+    "symbols": [],
+    "user_mentions": [],
+    "urls": [
+      {
+        "url": "https://t.co/jR2fmjJ5ES",
+        "expanded_url": "http://example.com",
+        "display_url": "example.com",
+        "indices": [
+          18,
+          41
+        ]
+      }
+    ],
+    "media": [
+      {
+        "id": 1123330453694324700,
+        "id_str": "1123330453694324736",
+        "indices": [
+          42,
+          65
+        ],
+        "media_url": "http://pbs.twimg.com/media/D5bfGJHUIAAvUFX.png",
+        "media_url_https": "https://pbs.twimg.com/media/D5bfGJHUIAAvUFX.png",
+        "url": "https://t.co/wOs5Twy4KS",
+        "display_url": "pic.twitter.com/wOs5Twy4KS",
+        "expanded_url": "https://twitter.com/gomi_ningen/status/1123330653255135233/photo/1",
+        "type": "photo",
+        "sizes": {
+          "medium": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          },
+          "large": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          },
+          "thumb": {
+            "w": 150,
+            "h": 150,
+            "resize": "crop"
+          },
+          "small": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          }
+        }
+      }
+    ]
+  },
+  "extended_entities": {
+    "media": [
+      {
+        "id": 1123330453694324700,
+        "id_str": "1123330453694324736",
+        "indices": [
+          42,
+          65
+        ],
+        "media_url": "http://pbs.twimg.com/media/D5bfGJHUIAAvUFX.png",
+        "media_url_https": "https://pbs.twimg.com/media/D5bfGJHUIAAvUFX.png",
+        "url": "https://t.co/wOs5Twy4KS",
+        "display_url": "pic.twitter.com/wOs5Twy4KS",
+        "expanded_url": "https://twitter.com/gomi_ningen/status/1123330653255135233/photo/1",
+        "type": "photo",
+        "sizes": {
+          "medium": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          },
+          "large": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          },
+          "thumb": {
+            "w": 150,
+            "h": 150,
+            "resize": "crop"
+          },
+          "small": {
+            "w": 512,
+            "h": 326,
+            "resize": "fit"
+          }
+        }
+      }
+    ]
+  },
+  "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+  "in_reply_to_status_id": null,
+  "in_reply_to_status_id_str": null,
+  "in_reply_to_user_id": null,
+  "in_reply_to_user_id_str": null,
+  "in_reply_to_screen_name": null,
+  "user": {
+    "id": 37937394,
+    "id_str": "37937394",
+    "name": "草ブレード",
+    "screen_name": "gomi_ningen",
+    "location": "tokyo",
+    "description": "description",
+    "url": "https://t.co/r3oq0F9Ax4",
+    "entities": {
+      "url": {
+        "urls": [
+          {
+            "url": "https://t.co/....",
+            "expanded_url": "http://example.com",
+            "display_url": "example.com",
+            "indices": [
+              0,
+              23
+            ]
+          }
+        ]
+      },
+      "description": {
+        "urls": []
+      }
+    },
+    "protected": false,
+    "followers_count": 1804,
+    "friends_count": 1441,
+    "listed_count": 95,
+    "created_at": "Tue May 05 14:46:36 +0000 2009",
+    "favourites_count": 91056,
+    "utc_offset": null,
+    "time_zone": null,
+    "geo_enabled": true,
+    "verified": false,
+    "statuses_count": 20899,
+    "lang": "en",
+    "contributors_enabled": false,
+    "is_translator": false,
+    "is_translation_enabled": false,
+    "profile_background_color": "ACDED6",
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme18/bg.gif",
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme18/bg.gif",
+    "profile_background_tile": false,
+    "profile_image_url": "http://pbs.twimg.com/profile_images/754806857663819776/fzEhacdR_normal.jpg",
+    "profile_image_url_https": "https://pbs.twimg.com/profile_images/754806857663819776/fzEhacdR_normal.jpg",
+    "profile_banner_url": "https://pbs.twimg.com/profile_banners/37937394/1552372825",
+    "profile_link_color": "1B95E0",
+    "profile_sidebar_border_color": "EEEEEE",
+    "profile_sidebar_fill_color": "F6F6F6",
+    "profile_text_color": "333333",
+    "profile_use_background_image": true,
+    "has_extended_profile": true,
+    "default_profile": false,
+    "default_profile_image": false,
+    "following": true,
+    "follow_request_sent": false,
+    "notifications": false,
+    "translator_type": "none"
+  },
+  "geo": null,
+  "coordinates": null,
+  "place": null,
+  "contributors": null,
+  "is_quote_status": false,
+  "retweet_count": 0,
+  "favorite_count": 0,
+  "favorited": false,
+  "retweeted": false,
+  "possibly_sensitive": false,
+  "lang": "ja"
+}

@@ -46,7 +46,7 @@ def handle(event: dict, config: NewsBotConfig):
 
 
 def retweet(message: RetweetMessage, logger: Logger) -> str:
-    r = twitter.request('statuses/retweet/:%d' % message.id_str)
+    r = twitter.request('statuses/retweet/:%s' % message.id_str)
     content = json.loads(r.response.content.decode())
     if r.status_code < 200 or r.status_code >= 300:
         logger.error(json.dumps({
