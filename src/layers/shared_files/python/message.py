@@ -99,3 +99,25 @@ class DetectRelatedImageMessage:
         return {
             'image_url': self._image_url,
         }
+
+
+class DetectRelatedURLMessage:
+    def __init__(self, url: str):
+        self._url = url
+
+    @staticmethod
+    def of(d: dict) -> Optional[DetectRelatedURLMessage]:
+        try:
+            return DetectRelatedURLMessage(d['url'])
+        except KeyError:
+            return None
+
+    @property
+    def url(self) -> str:
+        return self._url
+
+    @property
+    def dictionary(self) -> dict:
+        return {
+            'image_url': self._url,
+        }

@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/detect_related_tweet" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/retweet" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/tweet" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/detect_related_url" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

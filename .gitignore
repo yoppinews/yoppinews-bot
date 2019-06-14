@@ -47,3 +47,5 @@ packaged.yaml
 
 src/layers/pip_modules/*
 !src/layers/pip_modules/requirements.txt
+src/layers/scraping_tools/*
+!src/layers/scraping_tools/requirements.txt

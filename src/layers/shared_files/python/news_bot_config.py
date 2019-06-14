@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import yaml
 import boto3
@@ -59,6 +59,16 @@ class NewsBotConfig:
     @property
     def image_detection_message_template(self) -> Optional[str]:
         return self._dic.get('detect_related_tweet', {}).get('image_detection_message_template', None)
+
+    @property
+    def detect_url_selectors(self) -> Dict[str, str]:
+        return self._dic.get('detect_related_url', {})\
+            .get('selectors', {})
+
+    @property
+    def detect_url_ignored_urls(self) -> List[str]:
+        return self._dic.get('detect_related_url', {})\
+            .get('ignored_urls', [])
 
     @property
     def twitter_target_lists(self) -> List[CollectTweetsListConfig]:
