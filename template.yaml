@@ -57,6 +57,15 @@ Resources:
       CompatibleRuntimes:
         - python3.6
         - python3.7
+  ScrapingToolsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: yoppinews-bot pip modules(python 3.x)
+      ContentUri: src/layers/scraping_tools
+      RetentionPolicy: Retain
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
   SharedFilesLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -271,6 +280,8 @@ Resources:
             BucketName: !Sub ${ConfigBucket}
         - LambdaInvokePolicy:
             FunctionName: !Ref DetectRelatedImageFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DetectRelatedURLFunction
         - SNSPublishMessagePolicy:
             TopicName:
               !Select
@@ -290,7 +301,7 @@ Resources:
           TweetTopic: !Ref TweetTopic
           RetweetTopic: !Ref RetweetTopic
           DetectImageFunction: !Ref DetectRelatedImageFunction
-          DetectURLFunction: not_implemented_yet
+          DetectURLFunction: !Ref DetectRelatedURLFunction
       Events:
         CollectTweetsQueueEvent:
           Type: SQS
@@ -332,6 +343,32 @@ Resources:
             - !Ref DetectRelatedImageFunction
       RetentionInDays: !Sub ${LogRetentionInDays}
 
+  # 関連 URL 検知コンポーネント
+  DetectRelatedURLFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 10
+      MemorySize: 1024
+      CodeUri: src/detect_related_url/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+        - !Ref ScrapingToolsLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+  DetectRelatedURLFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedURLFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+
 
 Outputs:
   CollectTweetsFunction:
@@ -342,5 +379,7 @@ Outputs:
     Value: !Ref TweetFunction
   DetectRelatedImageFunction:
     Value: !Ref DetectRelatedImageFunction
+  DetectRelatedURLFunction:
+    Value: !Ref DetectRelatedURLFunction
   DetectRelatedTweetFunction:
     Value: !Ref DetectRelatedTweetFunction

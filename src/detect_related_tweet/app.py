@@ -8,7 +8,8 @@ import concurrent.futures
 from logging import Logger
 
 from tweet_handlers import TweetHandlers
-from message import CollectTweetsMessage, RetweetMessage, TweetMessage, DetectRelatedImageMessage
+from message import CollectTweetsMessage, RetweetMessage, TweetMessage, \
+    DetectRelatedImageMessage, DetectRelatedURLMessage
 from news_bot_config import NewsBotConfig
 from related_tweet_detector import RelatedTweetDetector
 
@@ -32,7 +33,7 @@ def lambda_handler(event, _):
     handlers = TweetHandlers(
         retweet_handler=lambda m: retweet_handler(m, config.logger),
         image_handler=lambda m: image_handler(m, config),
-        url_handler=lambda m: url_handler(m),
+        url_handler=lambda m: url_handler(m, config),
     )
     return handle(event, config, handlers)
 
@@ -81,8 +82,8 @@ def image_handler(message: CollectTweetsMessage, config: NewsBotConfig):
             'event': 'detect_related_tweet:image_handler',
             'details': 'config.detect_face_source_image_url is None'
         }, ensure_ascii=False))
-
         return
+
     for image_url in message.tweet.media_https_urls:
         try:
             payload = json.dumps(DetectRelatedImageMessage(image_url).dictionary).encode('utf-8')
@@ -92,21 +93,21 @@ def image_handler(message: CollectTweetsMessage, config: NewsBotConfig):
                 Payload=payload,
             )
             similarity = json.loads(res['Payload'].read().decode("utf-8")).get('similarity', 0)
+            dic = {
+                'status_id': message.tweet.id,
+                'image_url': image_url,
+                'similarity': '{0:.2f}'.format(similarity),
+                'status_url': message.tweet.status_url,
+            }
             logger.debug(json.dumps({
                 'event': 'detect_related_tweet:image_handler',
-                'details': {
-                    'status_id': message.tweet.id,
-                    'image_url': image_url,
-                    'result': {'similarity': similarity}
-                }
+                'details': dic,
             }, ensure_ascii=False))
             if similarity >= config.detect_face_similarity_threshold:
                 retweet_message = RetweetMessage(str(message.tweet.original_id))
                 retweet(retweet_message, logger)
                 if config.image_detection_message_template:
-                    similarity_str = '{0:.2f}'.format(similarity)
                     template = string.Template(json.dumps(config.image_detection_message_template, ensure_ascii=False))
-                    dic = {'similarity': similarity_str, 'status_url': message.tweet.status_url}
                     status = template.substitute(dic).strip("\"")
                     tweet_message = TweetMessage(status)
                     tweet(tweet_message, logger)
@@ -118,12 +119,44 @@ def image_handler(message: CollectTweetsMessage, config: NewsBotConfig):
             }, ensure_ascii=False))
 
 
-# not implemented yet
-def url_handler(_: CollectTweetsMessage, logger: Logger):
-    logger.warning(json.dumps({
-        'event': 'detect_related_tweet:url_handler',
-        'details': 'not implemented yet'
-    }, ensure_ascii=False))
+def url_handler(message: CollectTweetsMessage, config: NewsBotConfig):
+    logger = config.logger
+    for url in message.tweet.get_urls():
+        try:
+            payload = json.dumps(DetectRelatedURLMessage(url).dictionary).encode('utf-8')
+            res = lambda_client.invoke(
+                FunctionName=detect_related_url,
+                InvocationType='RequestResponse',
+                Payload=payload,
+            )
+            result = json.loads(res['Payload'].read().decode("utf-8"))
+            detected_text = result.get('detected_text', None)
+            selector = result.get('selector', None)
+            dic = {
+                'status_id': message.tweet.id,
+                'url': url,
+                'detected_text': detected_text,
+                'selector': selector,
+                'status_url': message.tweet.status_url,
+            }
+            logger.debug(json.dumps({
+                'event': 'detect_related_tweet:url_handler',
+                'details': dic
+            }, ensure_ascii=False))
+            if detected_text is not None:
+                retweet_message = RetweetMessage(str(message.tweet.original_id))
+                retweet(retweet_message, logger)
+                if config.url_detection_message_template:
+                    template = string.Template(json.dumps(config.url_detection_message_template, ensure_ascii=False))
+                    status = template.substitute(dic).strip("\"")
+                    tweet_message = TweetMessage(status)
+                    tweet(tweet_message, logger)
+                return
+        except Exception as e:
+            logger.error(json.dumps({
+                'event': 'detect_related_tweet:url_handler:error',
+                'details': e.__str__()
+            }, ensure_ascii=False))
 
 
 def tweet(m: TweetMessage, logger: Logger):

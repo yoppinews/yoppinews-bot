@@ -61,6 +61,10 @@ class NewsBotConfig:
         return self._dic.get('detect_related_tweet', {}).get('image_detection_message_template', None)
 
     @property
+    def url_detection_message_template(self) -> Optional[str]:
+        return self._dic.get('detect_related_tweet', {}).get('url_detection_message_template', None)
+
+    @property
     def detect_url_selectors(self) -> Dict[str, str]:
         return self._dic.get('detect_related_url', {})\
             .get('selectors', {})

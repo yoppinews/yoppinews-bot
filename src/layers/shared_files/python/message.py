@@ -119,5 +119,5 @@ class DetectRelatedURLMessage:
     @property
     def dictionary(self) -> dict:
         return {
-            'image_url': self._url,
+            'url': self._url,
         }
