@@ -5,6 +5,7 @@ import json
 import boto3
 import requests
 from logging import Logger
+from botocore.exceptions import ClientError
 
 from message import DetectRelatedImageMessage
 from news_bot_config import NewsBotConfig
@@ -39,16 +40,22 @@ def detect_related_image(
     rekognition,
     logger: Logger
 ) -> int:
-    target_image = requests.get(message.image_url).content
-    res = rekognition.compare_faces(
-        SourceImage={'Bytes': source_image},
-        TargetImage={'Bytes': target_image},
-        SimilarityThreshold=similarity_threshold
-    )
-    logger.debug(json.dumps({
-        'event': 'detect_related_image:detect_related_image',
-        'details': res
-    }))
-    if res['FaceMatches'] is None or len(list(res['FaceMatches'])) == 0:
-        return 0
-    return res['FaceMatches'][0]['Similarity']
+    try:
+        target_image = requests.get(message.image_url).content
+        res = rekognition.compare_faces(
+            SourceImage={'Bytes': source_image},
+            TargetImage={'Bytes': target_image},
+            SimilarityThreshold=similarity_threshold
+        )
+        logger.debug(json.dumps({
+            'event': 'detect_related_image:detect_related_image',
+            'details': res
+        }))
+        if res['FaceMatches'] is None or len(list(res['FaceMatches'])) == 0:
+            return 0
+        return res['FaceMatches'][0]['Similarity']
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidParameterException':
+            return 0
+        else:
+            raise
