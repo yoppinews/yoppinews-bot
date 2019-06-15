@@ -36,13 +36,14 @@ class CollectTweetsMessage:
 
 
 class RetweetMessage:
-    def __init__(self, id_str: str):
+    def __init__(self, id_str: str, cause: Optional[dict] = None):
         self._id_str = id_str
+        self._cause = cause
 
     @staticmethod
     def of(d: dict) -> Optional[RetweetMessage]:
         try:
-            return RetweetMessage(d['id'])
+            return RetweetMessage(d['id'], d.get('cause', None))
         except KeyError:
             return None
 
@@ -51,9 +52,14 @@ class RetweetMessage:
         return self._id_str
 
     @property
+    def cause(self) -> dict:
+        return self._cause
+
+    @property
     def dictionary(self) -> dict:
         return {
             'id': self._id_str,
+            'cause': self._cause,
         }
 
 

@@ -8,7 +8,7 @@ from message import CollectTweetsMessage
 class TweetHandlers:
     def __init__(
         self,
-        retweet_handler: Callable[[CollectTweetsMessage], None],
+        retweet_handler: Callable[[CollectTweetsMessage, str], None],
         image_handler: Callable[[CollectTweetsMessage], None],
         url_handler: Callable[[CollectTweetsMessage], None],
     ):
@@ -17,7 +17,7 @@ class TweetHandlers:
         self._url_handler = url_handler
 
     @property
-    def retweet_handler(self) -> Callable[[CollectTweetsMessage], None]:
+    def retweet_handler(self) -> Callable[[CollectTweetsMessage, str], None]:
         return self._retweet_handler
 
     @property

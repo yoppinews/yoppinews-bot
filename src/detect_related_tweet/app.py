@@ -5,6 +5,7 @@ import json
 import boto3
 import string
 import concurrent.futures
+from typing import Optional
 from logging import Logger
 
 from tweet_handlers import TweetHandlers
@@ -31,7 +32,7 @@ lambda_client = boto3.client('lambda') if stage != 'local' \
 def lambda_handler(event, _):
     config = NewsBotConfig.initialize(stage, config_bucket, config_key_name)
     handlers = TweetHandlers(
-        retweet_handler=lambda m: retweet_handler(m, config.logger),
+        retweet_handler=lambda m, k: retweet_handler(m, k, config.logger),
         image_handler=lambda m: image_handler(m, config),
         url_handler=lambda m: url_handler(m, config),
     )
@@ -63,15 +64,18 @@ def handle_message(
         }
     }, ensure_ascii=False))
     if result.retweet_needed:
-        handlers.retweet_handler(message)
+        handlers.retweet_handler(message, result.matched_keyword)
     if result.image_detection_needed:
         handlers.image_handler(message)
     if result.url_detection_needed:
         handlers.url_handler(message)
 
 
-def retweet_handler(message: CollectTweetsMessage, logger: Logger):
-    m = RetweetMessage(str(message.tweet.original_id))
+def retweet_handler(message: CollectTweetsMessage, detected_text: Optional[str], logger: Logger):
+    m = RetweetMessage(str(message.tweet.original_id), {
+        'detector': 'detect_related_tweet',
+        'detected_text': detected_text,
+    })
     retweet(m, logger)
 
 
@@ -104,7 +108,11 @@ def image_handler(message: CollectTweetsMessage, config: NewsBotConfig):
                 'details': dic,
             }, ensure_ascii=False))
             if similarity >= config.detect_face_similarity_threshold:
-                retweet_message = RetweetMessage(str(message.tweet.original_id))
+                retweet_message = RetweetMessage(str(message.tweet.original_id), {
+                    'detector': 'detect_related_image',
+                    'image_url': image_url,
+                    'similarity': similarity,
+                })
                 retweet(retweet_message, logger)
                 if config.image_detection_message_template:
                     template = string.Template(json.dumps(config.image_detection_message_template, ensure_ascii=False))
@@ -144,7 +152,11 @@ def url_handler(message: CollectTweetsMessage, config: NewsBotConfig):
                 'details': dic
             }, ensure_ascii=False))
             if detected_text is not None:
-                retweet_message = RetweetMessage(str(message.tweet.original_id))
+                retweet_message = RetweetMessage(str(message.tweet.original_id), {
+                    'detector': 'detect_related_url',
+                    'image_url': url,
+                    'detected_text': detected_text,
+                })
                 retweet(retweet_message, logger)
                 if config.url_detection_message_template:
                     template = string.Template(json.dumps(config.url_detection_message_template, ensure_ascii=False))

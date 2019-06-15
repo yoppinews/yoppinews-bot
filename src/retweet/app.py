@@ -57,8 +57,10 @@ def retweet(message: RetweetMessage, logger: Logger) -> str:
         if not any(e.get('code', 0) == 327 for e in content.get('errors', [])):
             r.response.raise_for_status()
     else:
-        logger.debug(json.dumps({
-            'event': 'retweet:retweet:debug',
-            'details': content,
-        }))
+        logger.info(json.dumps({
+            'event': 'retweet:retweet:done',
+            'details': {
+                'message': message.dictionary,
+            },
+        }, ensure_ascii=False))
     return message.id_str
