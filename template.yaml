@@ -389,7 +389,7 @@ Resources:
   DetectRelatedURLFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 10
+      Timeout: 30
       MemorySize: 1024
       CodeUri: src/detect_related_url/
       Handler: app.lambda_handler
