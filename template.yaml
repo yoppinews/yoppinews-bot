@@ -33,6 +33,8 @@ Parameters:
     Type: String
   ConfigKeyName:
     Type: String
+  KMSKeyOwnerIAMUser:
+    Type: String
 
 Mappings:
   StageMap:
@@ -44,6 +46,37 @@ Mappings:
       DefaultWriteCapacityUnits: 1
 
 Resources:
+  ParameterEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: false
+      Enabled: true
+      KeyPolicy:
+        Statement:
+        - Action:
+          - kms:*
+          Effect: Allow
+          Principal:
+            AWS:
+            - !Sub arn:aws:iam::${AWS::AccountId}:user/${KMSKeyOwnerIAMUser}
+          Resource: '*'
+        - Action:
+          - kms:Encrypt
+          - kms:ReEncrypt*
+          - kms:GenerateDataKey*
+          - kms:DescribeKey
+          Effect: Allow
+          Principal:
+            AWS:
+            - '*'
+          Resource: '*'
+        Version: '2012-10-17'
+  ParameterEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${Stage}-NewsBotParameterEncryptionKey
+      TargetKeyId: !Ref ParameterEncryptionKey
+
   # 共有コンポーネント
   DeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -87,18 +120,7 @@ Resources:
       Layers:
         - !Ref PipModulesLayer
         - !Ref SharedFilesLayer
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CollectTweetsDynamoDBTable
-        - S3ReadPolicy:
-            BucketName: !Sub ${ConfigBucket}
-        - SNSPublishMessagePolicy:
-            TopicName:
-              !Select
-                - 5
-                - !Split
-                  - ":"
-                  - !Ref CollectTweetsTopic
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
       Environment:
         Variables:
           TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
@@ -107,6 +129,20 @@ Resources:
           TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
           TargetTopic: !Ref CollectTweetsTopic
           DDBCacheTable: !Ref CollectTweetsDynamoDBTable
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CollectTweetsDynamoDBTable
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref CollectTweetsTopic
       Events:
         CollectTweetsEvent:
           Type: Schedule
@@ -184,9 +220,12 @@ Resources:
       Layers:
         - !Ref PipModulesLayer
         - !Ref SharedFilesLayer
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
       Policies:
         - S3ReadPolicy:
             BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
       Environment:
         Variables:
           TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
@@ -229,9 +268,12 @@ Resources:
       Layers:
         - !Ref PipModulesLayer
         - !Ref SharedFilesLayer
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
       Policies:
         - S3ReadPolicy:
             BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
       Environment:
         Variables:
           TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
