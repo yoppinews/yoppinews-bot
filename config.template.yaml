@@ -1,0 +1,58 @@
+---
+
+global_config:
+  log_level: DEBUG
+  detect_face_source_image_url: http://meikyu-kai.org/img/member/batter/ichiro_suzuki.jpg
+  detect_face_similarity_threshold: 90
+detect_related_tweet:
+  image_detection_message_template: '【関連画像を自動検出】類似度: ${similarity}% ${status_url}'
+  url_detection_message_template: '【関連URLを自動検出】検知キーワード: ${detected_text} ${status_url}'
+detect_related_url:
+  selectors:
+    'https://prtimes.jp': '.content .rbody'
+  ignored_urls:
+    - 'http(s)?://example.com'
+twitter_config:
+  target_lists:
+    -
+      # string: twitter リストオーナーのスクリーンネーム
+      owner_screen_name: yoppinews
+      # string: twitter リスト名
+      slug: sample_list
+      # boolean: 常にリツイートする
+      always_retweet: true
+      # boolean: リツイートを検知対象にする
+      include_retweet: true           # true|false
+      # boolean: リプライを検知対象にする
+      include_reply: true             # true|false
+      # boolean: 引用リツイートのテキストを検知対象にする
+      include_quoted_text: true       # true|false
+      # enum(NONE|EVALUATE|ALWAYS): 関連画像検知を有効にする
+      # NONE: 画像検知は無効
+      # EVALUATE: 対象のツイートがテキスト検知に引っかかっていない場合に、画像検知を有効にする
+      # ALWAYS: 常に画像検知を有効にする
+      evaluate_image: ALWAYS
+      # enum(NONE|EVALUATE|ALWAYS): 関連 URL 検知を有効にする
+      # NONE: 関連 URL 検知は無効
+      # EVALUATE: 対象のツイートがテキスト/関連画像検知に引っかかっていない場合に、関連 URL 検知を有効にする
+      # ALWAYS: 常に関連 URL 検知を有効にする
+      evaluate_url: NONE          # NONE|EVALUATE|ALWAYS
+      # リストから取得するツイート数
+      count: 10
+
+# キーワード検知に用いる設定: ツイート内容の検知と関連 URL 検知に用いられる
+keyword_config:
+  # List[string]: 検知対象から除外するスクリーンネーム
+  ignored_users:
+    - user_name1
+  # List[string]: 検知対象から除外するキーワード
+  ignored_keywords:
+    - 検知除外キーワード
+  # List[string]: 検知対象キーワード
+  keywords:
+    - イチロー
+    - 鈴木一郎
+  # Dict[string, string]: ある特定のスクリーンネームのユーザーのツイートの際のみに検知するキーワード
+  user_related_keywords:
+    TeamUehara:
+      - イッチ
