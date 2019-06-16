@@ -55,7 +55,13 @@ def detect_related_image(
             return 0
         return res['FaceMatches'][0]['Similarity']
     except ClientError as e:
-        if e.response['Error']['Code'] == 'InvalidParameterException':
+        error_code = e.response.get('Error', {}).get('Code', None)
+        expected_error_codes = [
+            'InvalidParameterException',
+            'InvalidImageFormatException',
+            'ImageTooLargeException'
+        ]
+        if error_code and error_code in expected_error_codes:
             return 0
         else:
             raise
