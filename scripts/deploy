@@ -58,7 +58,9 @@ sam deploy --template-file packaged.yaml \
         "TwitterConsumerSecret=$TwitterConsumerSecret" \
         "ConfigBucket=$ConfigBucket" \
         "ConfigKeyName=$ConfigKeyName" \
-        "KMSKeyOwnerIAMUser=$KMSKeyOwnerIAMUser"
+        "KMSKeyOwnerIAMUser=$KMSKeyOwnerIAMUser" \
+        "DDBReadCapacityUnits=$DDBReadCapacityUnits" \
+        "DDBWriteCapacityUnits=$DDBWriteCapacityUnits"
 
 aws cloudformation describe-stacks --stack-name $StackName \
     --output json \

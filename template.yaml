@@ -35,15 +35,12 @@ Parameters:
     Type: String
   KMSKeyOwnerIAMUser:
     Type: String
-
-Mappings:
-  StageMap:
-    prod:
-      DefaultReadCapacityUnits: 3
-      DefaultWriteCapacityUnits: 3
-    dev:
-      DefaultReadCapacityUnits: 1
-      DefaultWriteCapacityUnits: 1
+  DDBReadCapacityUnits:
+    Type: Number
+    Default: 3
+  DDBWriteCapacityUnits:
+    Type: Number
+    Default: 3
 
 Resources:
   ParameterEncryptionKey:
@@ -196,8 +193,8 @@ Resources:
     Properties:
       BillingMode: PROVISIONED
       ProvisionedThroughput:
-        ReadCapacityUnits: !FindInMap [ StageMap, !Ref Stage, DefaultReadCapacityUnits ]
-        WriteCapacityUnits: !FindInMap [ StageMap, !Ref Stage, DefaultWriteCapacityUnits ]
+        ReadCapacityUnits: !Sub ${DDBReadCapacityUnits}
+        WriteCapacityUnits: !Sub ${DDBWriteCapacityUnits}
       AttributeDefinitions:
         - AttributeName: original_id
           AttributeType: N
