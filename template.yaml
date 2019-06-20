@@ -362,7 +362,7 @@ Resources:
   DetectRelatedImageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 10
+      Timeout: 15
       CodeUri: src/detect_related_image/
       Handler: app.lambda_handler
       Layers:

@@ -21,10 +21,21 @@ source_img = None
 
 def lambda_handler(event, _):
     config = NewsBotConfig.initialize(stage, config_bucket, config_key_name)
-    global source_img
-    if source_img is None:
-        source_img = requests.get(config.detect_face_source_image_url).content
-    return handle(event, source_img, config.detect_face_similarity_threshold, rekognition_cli, config.logger)
+    config.logger.info(json.dumps({
+        'event': 'detect_related_image:lambda_handler:event',
+        'details': event,
+    }))
+    try:
+        global source_img
+        if source_img is None:
+            source_img = requests.get(config.detect_face_source_image_url).content
+        return handle(event, source_img, config.detect_face_similarity_threshold, rekognition_cli, config.logger)
+    except Exception as e:
+        config.logger.error(json.dumps({
+            'event': 'detect_related_image:detect_related_image',
+            'details': e.__str__()
+        }))
+        raise e
 
 
 def handle(event: dict, source_image: bytes, similarity_threshold: int, rekognition, logger: Logger):
