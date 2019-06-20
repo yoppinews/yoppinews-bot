@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/layers/shared_files/python" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/detect_related_image" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/collect_tweets" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/detect_related_tweet" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/retweet" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/tweet" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/detect_related_url" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="projectConfiguration" value="pytest" />
+    <option name="PROJECT_TEST_RUNNER" value="pytest" />
+  </component>
+</module>

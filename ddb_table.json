@@ -1,0 +1,19 @@
+{
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "original_id",
+      "AttributeType": "N"
+    }
+  ],
+  "TableName": "CollectTweets",
+  "KeySchema": [
+    {
+      "AttributeName": "original_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
+}

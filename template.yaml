@@ -3,37 +3,422 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   yoppinews-bot
 
-  Sample SAM Template for yoppinews-bot
-
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 5
+    Handler: app.lambda_handler
+    Runtime: python3.7
+    MemorySize: 128
+    Environment:
+      Variables:
+        Stage: !Sub ${Stage}
+        ConfigBucket: !Sub ${ConfigBucket}
+        ConfigKeyName: !Sub ${ConfigKeyName}
+
+Parameters:
+  Stage:
+    Type: String
+  LogRetentionInDays:
+    Type: Number
+    Default: 7
+  TwitterAccessTokenKey:
+    Type: String
+  TwitterAccessTokenSecret:
+    Type: String
+  TwitterConsumerKey:
+    Type: String
+  TwitterConsumerSecret:
+    Type: String
+  ConfigBucket:
+    Type: String
+  ConfigKeyName:
+    Type: String
+  KMSKeyOwnerIAMUser:
+    Type: String
+  DDBReadCapacityUnits:
+    Type: Number
+    Default: 3
+  DDBWriteCapacityUnits:
+    Type: Number
+    Default: 3
 
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  ParameterEncryptionKey:
+    Type: AWS::KMS::Key
     Properties:
-      CodeUri: hello_world/
+      EnableKeyRotation: false
+      Enabled: true
+      KeyPolicy:
+        Statement:
+        - Action:
+          - kms:*
+          Effect: Allow
+          Principal:
+            AWS:
+            - !Sub arn:aws:iam::${AWS::AccountId}:user/${KMSKeyOwnerIAMUser}
+          Resource: '*'
+        - Action:
+          - kms:Encrypt
+          - kms:ReEncrypt*
+          - kms:GenerateDataKey*
+          - kms:DescribeKey
+          Effect: Allow
+          Principal:
+            AWS:
+            - '*'
+          Resource: '*'
+        Version: '2012-10-17'
+  ParameterEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${Stage}-NewsBotParameterEncryptionKey
+      TargetKeyId: !Ref ParameterEncryptionKey
+
+  # 共有コンポーネント
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+
+  PipModulesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: yoppinews-bot pip modules(python 3.x)
+      ContentUri: src/layers/pip_modules
+      RetentionPolicy: Retain
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+  ScrapingToolsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: yoppinews-bot pip modules(python 3.x)
+      ContentUri: src/layers/scraping_tools
+      RetentionPolicy: Retain
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+  SharedFilesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: yoppinews-bot shared files
+      ContentUri: src/layers/shared_files
+      RetentionPolicy: Retain
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+
+
+  # ツイート収集コンポーネント
+  CollectTweetsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 120
+      CodeUri: src/collect_tweets/
       Handler: app.lambda_handler
-      Runtime: python3.7
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
+      Environment:
+        Variables:
+          TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
+          TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
+          TwitterConsumerKey: !Sub ${TwitterConsumerKey}
+          TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+          TargetTopic: !Ref CollectTweetsTopic
+          DDBCacheTable: !Ref CollectTweetsDynamoDBTable
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CollectTweetsDynamoDBTable
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref CollectTweetsTopic
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        CollectTweetsEvent:
+          Type: Schedule
           Properties:
-            Path: /hello
-            Method: get
+             Schedule: 'rate(1 minute)'
+  CollectTweetsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref CollectTweetsFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  CollectTweetsTopic:
+    Type: AWS::SNS::Topic
+  CollectTweetsTopicQueueSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt CollectTweetsQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+      TopicArn: !Ref CollectTweetsTopic
+
+  CollectTweetsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 60
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 2
+  CollectTweetsTopicQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref CollectTweetsQueue
+        PolicyDocument:
+          Statement:
+            Sid: CollectTweetsTopicQueuePolicy
+            Effect: Allow
+            Principal: "*"
+            Action: sqs:SendMessage
+            Resource: !GetAtt CollectTweetsQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref CollectTweetsTopic
+
+  CollectTweetsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Sub ${DDBReadCapacityUnits}
+        WriteCapacityUnits: !Sub ${DDBWriteCapacityUnits}
+      AttributeDefinitions:
+        - AttributeName: original_id
+          AttributeType: N
+      KeySchema:
+        - AttributeName: original_id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+
+  # リツイートコンポーネント
+  RetweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/retweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
+      Environment:
+        Variables:
+          TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
+          TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
+          TwitterConsumerKey: !Sub ${TwitterConsumerKey}
+          TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+  RetweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref RetweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  RetweetTopic:
+    Type: AWS::SNS::Topic
+  RetweetTopicFunctionSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt RetweetFunction.Arn
+      Protocol: lambda
+      TopicArn: !Ref RetweetTopic
+  RetweetTopicFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !GetAtt RetweetFunction.Arn
+        Principal: sns.amazonaws.com
+        SourceArn: !Ref RetweetTopic
+
+
+  # ツイートコンポーネント
+  TweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/tweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      KmsKeyArn: !GetAtt ParameterEncryptionKey.Arn
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - KMSDecryptPolicy:
+            KeyId: !Ref ParameterEncryptionKey
+      Environment:
+        Variables:
+          TwitterAccessTokenKey: !Sub ${TwitterAccessTokenKey}
+          TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
+          TwitterConsumerKey: !Sub ${TwitterConsumerKey}
+          TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+  TweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref TweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  TweetTopic:
+    Type: AWS::SNS::Topic
+  TweetTopicFunctionSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt TweetFunction.Arn
+      Protocol: lambda
+      TopicArn: !Ref TweetTopic
+  TweetTopicFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !GetAtt TweetFunction.Arn
+        Principal: sns.amazonaws.com
+        SourceArn: !Ref TweetTopic
+
+
+  # 関連ツイート検出コンポーネント
+  DetectRelatedTweetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 60
+      CodeUri: src/detect_related_tweet/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DetectRelatedImageFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DetectRelatedURLFunction
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref RetweetTopic
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Ref TweetTopic
+      Environment:
+        Variables:
+          TweetTopic: !Ref TweetTopic
+          RetweetTopic: !Ref RetweetTopic
+          DetectImageFunction: !Ref DetectRelatedImageFunction
+          DetectURLFunction: !Ref DetectRelatedURLFunction
+      Events:
+        CollectTweetsQueueEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt CollectTweetsQueue.Arn
+            BatchSize: 10
+  DetectRelatedTweetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedTweetFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+
+  # 画像認識コンポーネント
+  DetectRelatedImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 15
+      CodeUri: src/detect_related_image/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - AmazonRekognitionReadOnlyAccess
+  DetectRelatedImageFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedImageFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+  # 関連 URL 検知コンポーネント
+  DetectRelatedURLFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 30
+      MemorySize: 1024
+      CodeUri: src/detect_related_url/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref PipModulesLayer
+        - !Ref SharedFilesLayer
+        - !Ref ScrapingToolsLayer
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+  DetectRelatedURLFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join
+          - ''
+          - - '/aws/lambda/'
+            - !Ref DetectRelatedURLFunction
+      RetentionInDays: !Sub ${LogRetentionInDays}
+
+
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  CollectTweetsFunction:
+    Value: !Ref CollectTweetsFunction
+  RetweetFunction:
+    Value: !Ref RetweetFunction
+  TweetFunction:
+    Value: !Ref TweetFunction
+  DetectRelatedImageFunction:
+    Value: !Ref DetectRelatedImageFunction
+  DetectRelatedURLFunction:
+    Value: !Ref DetectRelatedURLFunction
+  DetectRelatedTweetFunction:
+    Value: !Ref DetectRelatedTweetFunction

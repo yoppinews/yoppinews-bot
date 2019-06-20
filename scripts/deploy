@@ -1,0 +1,67 @@
+#!/bin/bash
+
+usage_exit() {
+        echo "Usage: $0 [-f] (dev|prod)" 1>&2
+        exit 1
+}
+
+while getopts f OPT
+do
+    case ${OPT} in
+        f)  FLAG_F=1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+ARG1=$1
+stage=${ARG1}
+echo stage: ${stage}
+
+. ./.env.${stage}
+
+if [[ ${FLAG_F} = 1 ]]; then
+    layers=(
+      "pip_modules"
+      "scraping_tools"
+    )
+    for layer in ${layers[@]}; do
+      mkdir -p src/layers/$layer/
+      pushd src/layers/$layer/
+      docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
+      popd
+    done
+    if [ ! -e ./src/layers/scraping_tools/bin/headless-chromium ]; then
+      curl -SL https://github.com/adieuadieu/serverless-chrome/releases/download/v1.0.0-37/stable-headless-chromium-amazonlinux-2017-03.zip > /tmp/headless-chromium.zip
+      unzip /tmp/headless-chromium.zip -d ./src/layers/scraping_tools/bin/
+    fi
+    if [ ! -e ./src/layers/scraping_tools/bin/chromedriver ]; then
+      curl -SL https://chromedriver.storage.googleapis.com/2.37/chromedriver_linux64.zip > /tmp/chromedriver.zip
+      unzip /tmp/chromedriver.zip -d ./src/layers/scraping_tools/bin/
+    fi
+fi
+
+sam build
+
+sam package --output-template-file packaged.yaml --s3-bucket $PackageS3Bucket --s3-prefix $PackageS3Prefix --profile $AWSProfile
+
+sam deploy --template-file packaged.yaml \
+    --stack-name $StackName \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --profile $AWSProfile \
+    --parameter-overrides \
+        "Stage=$stage" \
+        "TwitterAccessTokenKey=$TwitterAccessTokenKey" \
+        "TwitterAccessTokenSecret=$TwitterAccessTokenSecret" \
+        "TwitterConsumerKey=$TwitterConsumerKey" \
+        "TwitterConsumerSecret=$TwitterConsumerSecret" \
+        "ConfigBucket=$ConfigBucket" \
+        "ConfigKeyName=$ConfigKeyName" \
+        "KMSKeyOwnerIAMUser=$KMSKeyOwnerIAMUser" \
+        "DDBReadCapacityUnits=$DDBReadCapacityUnits" \
+        "DDBWriteCapacityUnits=$DDBWriteCapacityUnits"
+
+aws cloudformation describe-stacks --stack-name $StackName \
+    --output json \
+    --profile $AWSProfile | jq '.Stacks[0].Outputs'

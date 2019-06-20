@@ -1,0 +1,22 @@
+#!/usr/local/bin/bash
+
+ARG1=$1
+if [ $# -ne 1 ] || [[ ! $ARG1 =~ ^(prod|dev|local)$ ]]; then
+  echo "usage: ./deploy [prod|dev|local]"
+  exit 1
+fi
+
+stage=$ARG1
+Stage="${ARG1[@]^}"
+echo stage: $stage
+
+if [ $stage = 'local' ]; then
+  ConfigBucket=news-bot
+  ConfigKeyName=config.json
+  AWSProfile=default
+  awslocal s3 cp ./config.dev.yaml s3://$ConfigBucket/$ConfigKeyName --profile $AWSProfile
+else
+  res=$(ruby -ryaml -e "p YAML.load(STDIN.read)" < config.${stage}.yaml)
+  . ./.env.$stage
+  aws s3 cp ./config.${stage}.yaml s3://$ConfigBucket/$ConfigKeyName --profile $AWSProfile
+fi

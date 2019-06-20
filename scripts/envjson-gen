@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ARG1=$1
+
+if [ $# -ne 1 ] || [[ ! $ARG1 =~ ^(prod|dev)$ ]]; then
+  echo "usage: ./deploy [prod|dev]"
+  exit 1
+fi
+
+. .env.$ARG1
+
+
+eval "echo \"$(cat env.template.yaml)\"" | yq '.' > env.${ARG1}.json

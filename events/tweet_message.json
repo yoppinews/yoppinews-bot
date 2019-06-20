@@ -1,0 +1,10 @@
+{
+  "Records": [
+    {
+      "Sns": {
+        "MessageId": "dummy",
+        "Message": "{\"status\":\"test\"}"
+      }
+    }
+  ]
+}
