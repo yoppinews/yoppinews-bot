@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Optional
 
 
-class CSSSelector:
+class Selectors:
     def __init__(self, selectors: Dict[str, str], ignored_urls: List[str]):
         self._selectors = selectors
         self._ignored_urls = ignored_urls

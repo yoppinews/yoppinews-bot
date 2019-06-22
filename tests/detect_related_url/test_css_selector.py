@@ -1,8 +1,8 @@
-from src.detect_related_url.css_selectors import CSSSelector
+from src.detect_related_url.css_selectors import Selectors
 
 
 def test_get_selector():
-    s = CSSSelector(
+    s = Selectors(
         selectors={
             'http(s)?://53ningen.com/hoge': '.wrapper',
             'http(s)?://53ningen.com/fuga': 'article'
