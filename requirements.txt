@@ -3,6 +3,7 @@ pytest
 pytest-mock
 mypy
 awslogs
+awscli-local
 
 boto3
 pyyaml

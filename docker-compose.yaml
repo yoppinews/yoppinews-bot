@@ -10,8 +10,6 @@ services:
     environment:
       - SERVICES=s3,sns,dynamodb
       - DATA_DIR=/tmp/localstack/data
-      - DEFAULT_REGION=ap-northeast-1
-      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - './.localstack:/tmp/localstack'
       - '/var/run/docker.sock:/var/run/docker.sock'
