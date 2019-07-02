@@ -16,7 +16,8 @@ def test_collect_tweets(mocker):
     assert ret[0].id == 123
 
 
-def test_notify_message():
+def test_notify_message(mocker):
+    mocker.patch('TwitterAPI.TwitterAPI.request', return_value=[{'id': 123}])
     app.notify_message(
         sns_client,
         app.target_topic,
