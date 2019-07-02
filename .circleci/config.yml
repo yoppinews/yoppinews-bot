@@ -26,7 +26,7 @@ jobs:
       - run:
           name: create sns topic
           command: |
-            awslocal sns create-topic --name TestTopic
+            aws sns create-topic --name TestTopic --endpoint-url http://localhost:4575
       - run:
           name: run tests
           command: |
