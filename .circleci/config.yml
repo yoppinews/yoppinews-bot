@@ -21,7 +21,7 @@ jobs:
       - setup_remote_docker
 
       - run:
-          name: Start container and verify it is working
+          name: Start container
           command: |
             set -x
             docker-compose up -d
