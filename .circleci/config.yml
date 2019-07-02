@@ -42,7 +42,8 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            ./scripts/test
+            python -m pytest tests/ -v
+            mypy --ignore-missing-imports --check-untyped-defs ./src/
 
       - store_artifacts:
           path: test-reports
