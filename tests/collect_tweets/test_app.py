@@ -5,7 +5,7 @@ from src.layers.shared_files.python.twitter import Tweet, TweetHandleOptions, Tw
 from src.layers.shared_files.python.message import CollectTweetsMessage
 from src.layers.shared_files.python.news_bot_config import NewsBotConfig
 
-sns_client = boto3.client('sns', endpoint_url='http://localhost:4575')
+sns_client = boto3.client('sns', endpoint_url='http://localstack:4575')
 config = NewsBotConfig({'global_config': {'log_level': 'INFO'}})
 
 
