@@ -1,13 +1,14 @@
-yq
-pytest
-pytest-mock
-mypy
-awslogs
-awscli-local
-
 boto3
 pyyaml
 botocore
 TwitterAPI
 requests
 selenium==3.141.0
+
+# for development
+yq
+pytest
+pytest-mock
+mypy
+awslogs
+awscli-local
