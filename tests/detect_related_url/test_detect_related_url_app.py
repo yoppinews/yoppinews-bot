@@ -43,4 +43,5 @@ def test_app_normal(event, mocker):
         'url': url,
         'selector': selector,
         'detected_text': keyword,
+        'expanded_url': 'http://example.com',
     }
