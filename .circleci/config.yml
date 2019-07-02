@@ -18,6 +18,8 @@ jobs:
             chmod +x ~/docker-compose
             sudo mv ~/docker-compose /usr/local/bin/docker-compose
 
+      - setup_remote_docker
+
       - run:
           name: Start container and verify it is working
           command: |
