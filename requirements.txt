@@ -1,5 +1,6 @@
 yq
 pytest
+pytest-mock
 mypy
 awslogs
 
