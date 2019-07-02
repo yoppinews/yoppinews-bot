@@ -1,6 +1,8 @@
 yoppinews-bot
 ===============
 
+[![CircleCI](https://circleci.com/gh/53ningen/yoppinews-bot/tree/develop.svg?style=svg)](https://circleci.com/gh/53ningen/yoppinews-bot/tree/develop)
+
 [@yoppinews](https://twitter.com/yoppinews) にて使われている関連ツイート検出 bot エンジン
 
 # yoppinews-bot とは
