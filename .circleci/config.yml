@@ -5,7 +5,7 @@ jobs:
       - image: circleci/python:3.7.2
       - image: localstack/localstack
     environment:
-      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
     working_directory: ~/repo
     steps:
       - checkout
