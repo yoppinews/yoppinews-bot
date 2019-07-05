@@ -106,7 +106,6 @@ Resources:
         - python3.6
         - python3.7
 
-
   # ツイート収集コンポーネント
   CollectTweetsFunction:
     Type: AWS::Serverless::Function
@@ -209,6 +208,8 @@ Resources:
 
 
   # リツイートコンポーネント
+  RetweetTopic:
+    Type: AWS::SNS::Topic
   RetweetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -229,6 +230,11 @@ Resources:
           TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
           TwitterConsumerKey: !Sub ${TwitterConsumerKey}
           TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+      Events:
+        RetweetEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref RetweetTopic
   RetweetFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -239,24 +245,10 @@ Resources:
             - !Ref RetweetFunction
       RetentionInDays: !Sub ${LogRetentionInDays}
 
-  RetweetTopic:
-    Type: AWS::SNS::Topic
-  RetweetTopicFunctionSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt RetweetFunction.Arn
-      Protocol: lambda
-      TopicArn: !Ref RetweetTopic
-  RetweetTopicFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-        Action: lambda:InvokeFunction
-        FunctionName: !GetAtt RetweetFunction.Arn
-        Principal: sns.amazonaws.com
-        SourceArn: !Ref RetweetTopic
-
 
   # ツイートコンポーネント
+  TweetTopic:
+    Type: AWS::SNS::Topic
   TweetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -277,6 +269,11 @@ Resources:
           TwitterAccessTokenSecret: !Sub ${TwitterAccessTokenSecret}
           TwitterConsumerKey: !Sub ${TwitterConsumerKey}
           TwitterConsumerSecret: !Sub ${TwitterConsumerSecret}
+      Events:
+        RetweetEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref TweetTopic
   TweetFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -286,22 +283,6 @@ Resources:
           - - '/aws/lambda/'
             - !Ref TweetFunction
       RetentionInDays: !Sub ${LogRetentionInDays}
-
-  TweetTopic:
-    Type: AWS::SNS::Topic
-  TweetTopicFunctionSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt TweetFunction.Arn
-      Protocol: lambda
-      TopicArn: !Ref TweetTopic
-  TweetTopicFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-        Action: lambda:InvokeFunction
-        FunctionName: !GetAtt TweetFunction.Arn
-        Principal: sns.amazonaws.com
-        SourceArn: !Ref TweetTopic
 
 
   # 関連ツイート検出コンポーネント
@@ -406,7 +387,6 @@ Resources:
           - - '/aws/lambda/'
             - !Ref DetectRelatedURLFunction
       RetentionInDays: !Sub ${LogRetentionInDays}
-
 
 
 Outputs:
