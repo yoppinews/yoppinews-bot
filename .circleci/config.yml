@@ -33,6 +33,12 @@ jobs:
           name: create sns topic
           command: |
             aws sns create-topic --name TestTopic --endpoint-url http://localhost:4575
+
+      - run:
+          name: cfn-lint
+          command: |
+            cfn-lint template.yaml
+
       - run:
           name: run tests
           command: |

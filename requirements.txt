@@ -12,3 +12,4 @@ pytest-mock
 mypy
 awslogs
 awscli-local
+cfn-lint
