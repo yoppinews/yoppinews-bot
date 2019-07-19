@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cfn-lint template.yaml
+
 docker-compose up -d
 . .env.dev
 python -m pytest tests/ -v

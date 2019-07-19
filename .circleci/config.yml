@@ -23,7 +23,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            sudo pip install -r requirements.txt
       - save_cache:
           paths:
             - ./venv
@@ -33,6 +33,12 @@ jobs:
           name: create sns topic
           command: |
             aws sns create-topic --name TestTopic --endpoint-url http://localhost:4575
+
+      - run:
+          name: cfn-lint
+          command: |
+            cfn-lint template.yaml
+
       - run:
           name: run tests
           command: |
