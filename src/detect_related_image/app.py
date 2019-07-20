@@ -14,7 +14,7 @@ stage = os.environ['Stage']
 config_bucket = os.environ['ConfigBucket']
 config_key_name = os.environ['ConfigKeyName']
 
-rekognition_cli = boto3.client('rekognition')
+rekognition_cli = boto3.client('rekognition', region_name='us-east-1')
 
 source_img = None
 
