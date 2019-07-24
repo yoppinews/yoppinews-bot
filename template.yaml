@@ -147,11 +147,7 @@ Resources:
   CollectTweetsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref CollectTweetsFunction
+      LogGroupName: !Sub /aws/lambda/${CollectTweetsFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
   CollectTweetsTopic:
@@ -238,11 +234,7 @@ Resources:
   RetweetFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref RetweetFunction
+      LogGroupName: !Sub /aws/lambda/${RetweetFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
 
@@ -277,11 +269,7 @@ Resources:
   TweetFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref TweetFunction
+      LogGroupName: !Sub /aws/lambda/${TweetFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
 
@@ -331,11 +319,7 @@ Resources:
   DetectRelatedTweetFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref DetectRelatedTweetFunction
+      LogGroupName: !Sub /aws/lambda/${DetectRelatedTweetFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
 
@@ -356,11 +340,7 @@ Resources:
   DetectRelatedImageFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref DetectRelatedImageFunction
+      LogGroupName: !Sub /aws/lambda/${DetectRelatedImageFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
   # 関連 URL 検知コンポーネント
@@ -381,11 +361,7 @@ Resources:
   DetectRelatedURLFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        !Join
-          - ''
-          - - '/aws/lambda/'
-            - !Ref DetectRelatedURLFunction
+      LogGroupName: !Sub /aws/lambda/${DetectRelatedURLFunction}
       RetentionInDays: !Sub ${LogRetentionInDays}
 
 
