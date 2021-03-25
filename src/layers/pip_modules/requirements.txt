@@ -1,4 +1,4 @@
 boto3==1.9.100
-pyyaml==5.1
+pyyaml==5.4
 TwitterAPI==2.5.0
 requests==2.21.0
